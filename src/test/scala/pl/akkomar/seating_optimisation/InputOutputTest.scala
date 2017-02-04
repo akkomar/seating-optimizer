@@ -7,7 +7,17 @@ class InputReaderTest extends FlatSpec with Matchers {
   "Input Reader" should "properly read sample input file" in {
     val parsedInput = InputReader.read("src/test/resources/input.txt")
 
-    parsedInput shouldEqual Input(PlaneDimensions(4, 4), Seq())
+    parsedInput shouldEqual Input(
+      PlaneDimensions(4, 4),
+      Seq(
+        PassengerGroup(Seq(Passenger(1, windowPreferred = true), Passenger(2), Passenger(3))),
+        PassengerGroup(Seq(Passenger(4), Passenger(5), Passenger(6), Passenger(7))),
+        PassengerGroup(Seq(Passenger(8))),
+        PassengerGroup(Seq(Passenger(9), Passenger(10), Passenger(11, windowPreferred = true))),
+        PassengerGroup(Seq(Passenger(12, windowPreferred = true))),
+        PassengerGroup(Seq(Passenger(13), Passenger(14))),
+        PassengerGroup(Seq(Passenger(15), Passenger(16)))
+      ))
   }
 }
 

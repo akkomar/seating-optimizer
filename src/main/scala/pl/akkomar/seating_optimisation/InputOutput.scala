@@ -4,7 +4,7 @@ case class Input(planeDimensions: PlaneDimensions, passengerGroups: Seq[Passenge
 
 case class PlaneDimensions(seatsPerRow: Int, numberOfRows: Int)
 
-case class PassengerGroup()
+case class PassengerGroup(passengers: Seq[Passenger])
 
 case class Passenger(id: Int, windowPreferred: Boolean = false)
 
@@ -16,7 +16,18 @@ object InputReader {
     val seatsPerRow = rawPlaneDimensions(0).toInt
     val rowsNum = rawPlaneDimensions(1).toInt
 
-    Input(PlaneDimensions(seatsPerRow, rowsNum), Seq())
+    val passengerGroups: Seq[PassengerGroup] = fileContents.tail.map { line =>
+      val passengers = line.split(" ").map(parsePassenger)
+      PassengerGroup(passengers)
+    }
+
+    Input(PlaneDimensions(seatsPerRow, rowsNum), passengerGroups)
+  }
+
+  private def parsePassenger(p: String): Passenger = {
+    val windowPreferred = p.contains("W")
+    val id = p.replace("W", "").toInt
+    Passenger(id, windowPreferred)
   }
 }
 
