@@ -21,11 +21,11 @@ object InputReader {
 }
 
 
-case class Output(seatingMap: Array[Array[Int]], passengerSatisfactionPercent: Int)
+case class Output(seatingMap: Array[Array[Option[Int]]], passengerSatisfactionPercent: Int)
 
 object OutputWriter {
   def toString(output: Output): String = {
-    output.seatingMap.map(_.mkString(" ")).mkString("\n") +
+    output.seatingMap.map(row => row.flatten.mkString(" ")).mkString("\n") +
       s"\n${output.passengerSatisfactionPercent}%"
   }
 }
