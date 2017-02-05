@@ -21,8 +21,8 @@ class OutputWriterTest extends FlatSpec with Matchers {
     val outputString = OutputWriter.toString(output)
 
     val expectedOutputString =
-      """4 5 6 7
-        |1 2 3 8
+      """1 2 3 8
+        |4 5 6 7
         |11 9 10 12
         |13 14 15 16
         |100%""".stripMargin
@@ -66,8 +66,8 @@ object ExampleTestData {
 
   val exampleOutput = Output(
     Array(
-      Array[Option[Int]](4, 5, 6, 7),
       Array[Option[Int]](1, 2, 3, 8),
+      Array[Option[Int]](4, 5, 6, 7),
       Array[Option[Int]](11, 9, 10, 12),
       Array[Option[Int]](13, 14, 15, 16)
     ),

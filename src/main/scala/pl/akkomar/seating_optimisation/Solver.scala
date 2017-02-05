@@ -5,20 +5,17 @@ trait Solver {
 }
 
 /**
-  * Solves seating arrangement problem using first-fit decreasing algorithm
+  * Solves seating arrangement problem using first-fit algorithm
   */
-object FirstFitDecreasingSolver extends Solver {
+object FirstFitSolver extends Solver {
 
   override def arrangeSeats(input: Input): Output = {
     //allocate empty seating map
     val dim = input.planeDimensions
     val seatMap = Array.fill(dim.numberOfRows, dim.seatsPerRow)(None: Option[Int])
 
-    //sort passenger groups by size
-    val passengerGroups = input.passengerGroups.sortWith((first, second) => first.passengers.size > second.passengers.size)
-
     //allocate passengers
-    passengerGroups.foreach { group =>
+    input.passengerGroups.foreach { group =>
       if (freeSeatsRemaining(seatMap)) {
         val groupSize = group.passengers.size
         val allocatedTogether = tryToAllocateGroup(group, seatMap)
@@ -30,7 +27,6 @@ object FirstFitDecreasingSolver extends Solver {
     }
 
     val satisfactionPercent = calculatePassengerSatisfactionPercent(input, seatMap)
-
 
     Output(seatMap, satisfactionPercent)
   }
