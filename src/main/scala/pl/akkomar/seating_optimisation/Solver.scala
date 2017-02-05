@@ -14,17 +14,20 @@ object FirstFitSolver extends Solver {
     val dim = input.planeDimensions
     val seatMap = Array.fill(dim.numberOfRows, dim.seatsPerRow)(None: Option[Int])
 
+    val splitGroups = collection.mutable.ListBuffer[PassengerGroup]()
+
     //allocate passengers
     input.passengerGroups.foreach { group =>
-      if (freeSeatsRemaining(seatMap)) {
-        val groupSize = group.passengers.size
-        val allocatedTogether = tryToAllocateGroup(group, seatMap)
-        if (!allocatedTogether) {
-          //we could leave this for the end in order to get better score in some cases
-          group.passengers.foreach(allocateSinglePassenger(_, seatMap))
-        }
+      val allocatedTogether = tryToAllocateGroup(group, seatMap)
+      if (!allocatedTogether) {
+        //we failed to allocate group because there were no free rows, let's split it and
+        // try again with individual passengers in the end
+        splitGroups ++= group.passengers.map(p => PassengerGroup(Seq(p)))
       }
     }
+
+    //allocate split groups
+    splitGroups.foreach { group => tryToAllocateGroup(group, seatMap) }
 
     val satisfactionPercent = PassengerSatisfactionCalculator.calculatePassengerSatisfactionPercent(input, seatMap)
 
@@ -43,48 +46,25 @@ object FirstFitSolver extends Solver {
     //put those preferring windows in the beginning
     val passengers = group.passengers.sortWith((first, _) => first.windowPreferred)
     val groupSize = passengers.size
-    if (groupSize == 1) {
-      allocateSinglePassenger(passengers.head, seatMap)
+    val windowPreferred = passengers.exists(_.windowPreferred)
+
+    //find first available row
+    val availableRowOption = seatMap.zipWithIndex.find { case (row, rowNumber) => row.count(_.isEmpty) >= groupSize }.map(_._2)
+    //if needed, find first available row with free window seat
+    val availableRowWithWindowOption = if (windowPreferred) {
+      seatMap.zipWithIndex.find { case (row, rowNumber) => row.count(_.isEmpty) >= groupSize && (row.head.isEmpty || row.last.isEmpty) }.map(_._2)
     } else {
-      val windowPreferred = passengers.exists(_.windowPreferred)
-
-      val availableRowOption = if (windowPreferred) {
-        //if we don't find empty row with window, we'll fall back to single passenger allocation since they won't be happy anyway
-        seatMap.zipWithIndex.find { case (row, rowNumber) => row.head.isEmpty && row.count(_.isEmpty) >= groupSize }.map(_._2)
-      } else {
-        seatMap.zipWithIndex.find { case (row, rowNumber) => row.count(_.isEmpty) >= groupSize }.map(_._2)
-      }
-
-      availableRowOption match {
-        case None => false
-        case Some(rowNumber) =>
-          var nextFreeSeat = seatMap(rowNumber).indexOf(None)
-          passengers.foreach { p =>
-            seatMap(rowNumber)(nextFreeSeat) = Some(p.id)
-            nextFreeSeat += 1
-          }
-          true
-      }
-
+      None
     }
-  }
 
-  private def allocateSinglePassenger(passenger: Passenger, seatMap: Array[Array[Option[Int]]]): Boolean = {
-    val rowNumberOption = if (passenger.windowPreferred) {
-      val r = seatMap.zipWithIndex.find { case (row, rowNumber) => row.head.isEmpty || row.last.isEmpty }.map(_._2)
-      if (r.isDefined) {
-        r
-      } else {
-        seatMap.zipWithIndex.find { case (row, rowNumber) => row.contains(None) }.map(_._2)
-      }
-    } else {
-      seatMap.zipWithIndex.find { case (row, rowNumber) => row.contains(None) }.map(_._2)
-    }
-    rowNumberOption match {
+    availableRowWithWindowOption.orElse(availableRowOption) match {
       case None => false
       case Some(rowNumber) =>
-        val freeSeat = seatMap(rowNumber).indexOf(None)
-        seatMap(rowNumber)(freeSeat) = Some(passenger.id)
+        var nextFreeSeat = seatMap(rowNumber).indexOf(None)
+        passengers.foreach { p =>
+          seatMap(rowNumber)(nextFreeSeat) = Some(p.id)
+          nextFreeSeat += 1
+        }
         true
     }
   }
