@@ -26,7 +26,7 @@ object FirstFitSolver extends Solver {
       }
     }
 
-    val satisfactionPercent = calculatePassengerSatisfactionPercent(input, seatMap)
+    val satisfactionPercent = PassengerSatisfactionCalculator.calculatePassengerSatisfactionPercent(input, seatMap)
 
     Output(seatMap, satisfactionPercent)
   }
@@ -87,37 +87,5 @@ object FirstFitSolver extends Solver {
         seatMap(rowNumber)(freeSeat) = Some(passenger.id)
         true
     }
-  }
-
-  private def calculatePassengerSatisfactionPercent(input: Input, seatMap: Array[Array[Option[Int]]]): Int = {
-    val numberOfPassengers = input.passengerGroups.map(_.passengers.size).sum
-    val numberOfHappyPassengers = input.passengerGroups.map { group =>
-      val passengers = group.passengers
-      val allocatedSeats = passengers.flatMap(getSeatOf(_, seatMap))
-
-      val everyoneHasSeat = allocatedSeats.size == passengers.size
-      lazy val everyoneInSameRow = allocatedSeats.map(_._1).forall(_ == allocatedSeats.head._1)
-      lazy val happyNearWindows = passengers.filter(_.windowPreferred).map { p =>
-        getSeatOf(p, seatMap).map(_._2).exists { seatNumber =>
-          seatNumber == 0 || seatNumber == (input.planeDimensions.seatsPerRow - 1)
-        }
-      }.forall(_ == true)
-
-      val rowIsHappy = everyoneHasSeat && everyoneInSameRow && happyNearWindows
-
-      if (rowIsHappy) passengers.size else 0
-    }.sum
-
-    (numberOfHappyPassengers / numberOfPassengers.toDouble * 100).toInt
-  }
-
-  /**
-    * Returns Some(row,seat) of a passenger, or None if not allocated
-    */
-  private def getSeatOf(p: Passenger, seatMap: Array[Array[Option[Int]]]): Option[(Int, Int)] = {
-    seatMap.zipWithIndex.map { case (row, rowNumber) =>
-      val seat = row.indexOf(Some(p.id))
-      if (seat != -1) Some(rowNumber, seat) else None
-    }.find(_.isDefined).get
   }
 }
