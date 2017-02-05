@@ -4,6 +4,11 @@ overly complicated. One easy and good optimization would be using _first-fit dec
 but that would give slightly different result for the example input.
 
 ## Running
+### Tests
+```bash
+sbt test
+```
+### Application
 ```bash
 sbt "run-main pl.akkomar.seating_optimisation.ArrangeSeats src/test/resources/input.txt"
 ```
